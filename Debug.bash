@@ -61,9 +61,8 @@ function debug() {
 
     # begin function logic
 
-    local debug_identifier_minimum_width="           "
-    local debug_funcname_minimum_width="                                 "
-    local hostname_minimum_width="            "
+    local debug_identifier_minimum_width=11
+    local debug_function_name_minimum_width=16
 
     local -i debug_color=1
     local debug_message="$1"
@@ -118,10 +117,6 @@ function debug() {
 
     if [ $debug_output -eq 1 ]; then
 
-        local tput_bold="$(tput bold)"
-        local tput_smso="$(tput smso)"
-        local tput_sgr0="$(tput sgr0)"
-
         # set the color, if applicable
         if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
             if [ $debug_level -ge 256 ]; then
@@ -130,32 +125,54 @@ function debug() {
                 let debug_color=$debug_level
             fi
             if [ $debug_level -lt 15 ]; then
-                printf "%s" $tput_bold
+                printf "%s" ${Tput_Bold}
                 printf "%s" "$(tput setaf $debug_color)"
             else
-                if [ $debug_level -le 50 ]; then
-                    printf "%s" $tput_bold
+                if [ $debug_level -le 101 ]; then
+                    local bg_color fg_color
+                    let local color_select=16
+                    let local bg_select=0
+                    let local fg_select=0
+                    for fg_color in {0..15}; do
+                        let fg_select=$fg_select+1
+                        color_select=$fg_select
+                        for bg_color in {1..11}; do
+                            if [ $bg_color -eq $fg_color ]; then continue; fi
+                            let bg_select=$bg_select+1
+                            color_select=$bg_select
+                            if [ $color_select -ne $debug_level ]; then continue; fi
+                            local tput_setaf=$(tput setaf $fg_color)
+                            local tput_setab=$(tput setab $bg_color)
+                        done
+                    done
+                    #printf "%s" ${Tput_Bold}
+                    printf "%s" ${tput_setab}
+                    printf "%s" ${tput_setaf}
                     let debug_color=$debug_color*5
                 else
                     printf "%s" $tput_smso
                     let debug_color=$debug_color+12
+                    printf "%s" "$(tput setab $debug_color)"
                 fi
-                printf "%s" "$(tput setab $debug_color)"
             fi
 
         fi
 
         # display the appropriate message
         local debug_identifier="debug [$debug_level]"
+        let local debug_identifier_pad=${debug_identifier_minimum_width}-${#debug_identifier}
+        if [ ${debug_identifier_pad} -lt 0 ]; then debug_identifier_pad=0; fi
         if [ "$debug_function_name" != "" ] && [ $Debug -ge 15 ]; then
-            printf "%s%s : %s%s : %s()%s : %s\n" "$debug_identifier" "${debug_identifier_minimum_width:${#debug_identifier}}" "${Hostname}" "${hostname_minimum_width:${#Hostname}}" "${debug_function_name}" "${debug_funcname_minimum_width:${#debug_function_name}}" "${debug_message}$tput_sgr0"
+            let local debug_function_name_pad=${debug_function_name_minimum_width}-${#debug_function_name}
+            if [ ${debug_function_name_pad} -lt 0 ]; then debug_function_name_pad=0; fi
+            printf "%s%${debug_identifier_pad}s : %s : %s()%${debug_function_name_pad}s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_function_name}" " " "${debug_message}${Tput_Sgr0}"
         else
-            printf "%s%s : %s%s : %s\n" "$debug_identifier" "${debug_identifier_minimum_width:${#debug_identifier}}" "${Hostname}" "${hostname_minimum_width:${#Hostname}}" "${debug_message}$tput_sgr0"
+            printf "%s%${debug_identifier_pad}s : %s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_message}${Tput_Sgr0}"
         fi
 
         # reset the color, if applicable
         if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
-            printf "%s" $tput_sgr0
+            printf "%s" ${Tput_Sgr0}
         fi
     fi
 
@@ -179,7 +196,7 @@ function debugColors() {
 
     printf "Standard 16 colors\n"
     for ((color = 0; color < 17; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
+        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
     done
     printf "|\n\n"
 
@@ -188,13 +205,13 @@ function debugColors() {
         printf "|"
         ((column > 5 && (column = 0, ++line))) && printf " |"
         ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
-        printf "%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
+        printf "%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
     done
     printf "|\n\n"
 
     printf "Greyscale 232 to 255 for 256 colors\n"
     for ((; color < 256; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
+        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
     done
     printf "|\n"
 
@@ -337,6 +354,16 @@ if [ "$Hostname" == "" ]; then Hostname=$HOSTNAME; fi
 if [ "$Hostname" == "" ]; then Hostname=$(hostname -s); fi
 
 if [ "$Pwd" == "" ]; then Pwd=$(pwd); fi
+
+if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
+
+if [ "$Tput_Setab" == "" ]; then Tput_Smso="$(tput setab)"; fi
+
+if [ "$Tput_Setaf" == "" ]; then Tput_Smso="$(tput setaf)"; fi
+
+if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso)"; fi
+
+if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0)"; fi
 
 if [ "$Whom" == "" ]; then Whom=$(who -m); fi
 

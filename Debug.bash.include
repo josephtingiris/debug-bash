@@ -1,0 +1,21 @@
+# begin Debug.bash.include
+
+Debug_Bash="Debug.bash"
+Debug_Bash_Dir="$(readlink -e $(dirname $BASH_SOURCE))"
+while [ "$Debug_Bash_Dir" != "" ] && [ "$Debug_Bash_Dir" != "/" ]; do # search backwards
+    for Debug_Bash_Source_Dir in $Debug_Bash_Dir $Debug_Bash_Dir/include/debug-bash $Debug_Bash_Dir/include; do
+        Debug_Bash_Source=${Debug_Bash_Source_Dir}/${Debug_Bash}
+        if [ -r "${Debug_Bash_Source}" ]; then
+            source "${Debug_Bash_Source}"
+            break
+        else
+            unset Debug_Bash_Source
+        fi
+    done
+    if [ "$Debug_Bash_Source" != "" ]; then break; fi
+    Debug_Bash_Dir=$(dirname "$Debug_Bash_Dir")
+done
+if [ "$Debug_Bash_Source" == "" ]; then echo "$Debug_Bash file not found"; exit 1; fi
+unset Debug_Bash_Dir Debug_Bash
+
+# end Debug.bash.include

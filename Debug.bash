@@ -6,7 +6,9 @@
 
 export PATH="/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/sbin:/usr/sbin:${PATH}"
 
+#
 # Global_Variables (that do not require dependencies)
+#
 
 if [ "$Debug" == "" ]; then
     if [ "$DEBUG" == "" ]; then
@@ -22,8 +24,11 @@ fi
 
 if [ "$TERM" == "" ]; then export TERM="ansi"; fi
 
+#
 # Functions
+#
 
+# an example, prototype using debugFunction
 function _prototypeFunction() {
     debugFunction $@ # call debugFunction when the function finished
 
@@ -36,6 +41,7 @@ function _prototypeFunction() {
     debugFunction $@ # call debugFunction again to know when the function finished
 }
 
+# output a message & 'abort' (exit) with a return code
 function aborting() {
     debugFunction $@
 
@@ -57,6 +63,7 @@ function aborting() {
     debugFunction $@
 }
 
+# output consistently formatted debug messages (in color if TERM supports it)
 function debug() {
 
     # begin function logic
@@ -69,15 +76,6 @@ function debug() {
     local -i debug_level="$2"
     local debug_function_name="$3"
     local -i debug_output=0
-
-    if [ "$Debug" == "" ]; then
-        Debug=0
-    else
-        # recast Debug as an integer, e.g. in case a string was given
-        local -i debug_integer=$Debug
-        Debug=$debug_integer
-
-    fi
 
     if [ "$debug_function_name" == "" ] && [ "$debugFunction_Name" != "" ]; then
         debug_function_name=$debugFunction_Name
@@ -182,10 +180,7 @@ function debug() {
 
 }
 
-#
-# display color chart
-#
-
+# output a tput color chart
 function debugColors() {
 
     # begin function logic
@@ -219,6 +214,7 @@ function debugColors() {
 
 }
 
+# outputs calling function @ debug_level > 100
 function debugFunction() {
 
     # begin function logic
@@ -262,6 +258,7 @@ function debugFunction() {
 
 }
 
+# outputs a separator line
 function debugSeparator() {
 
     # begin function logic
@@ -285,6 +282,7 @@ function debugSeparator() {
 
 }
 
+# outputs a padded name=value variable pair
 function debugValue() {
 
     # begin function logic
@@ -307,7 +305,6 @@ function debugValue() {
         local -i variable_padded=$((variable_padded+1))
     done
 
-    if [ "$Debug" == "" ]; then Debug=0; fi
     if [ "$variable_comment" != "" ]; then variable_value+=" ($variable_comment)"; fi
 
     debug "$variable_name = $variable_value" $debug_level
@@ -316,8 +313,10 @@ function debugValue() {
 
 }
 
-# dependency checks to make sure a dependent file exists in the environment PATH (via which) and aborts if it doesn't
+# checks to make sure a dependent executable exists in the PATH (via which) and aborts if it doesn't
 function dependency() {
+
+    # begin function logic
 
     local dependency dependencies="$1"
 
@@ -331,16 +330,27 @@ function dependency() {
     done
     unset dependency dependencies
 
+    # end function logic
+
 }
 
-# Main Logic
+#
+# Functions (deprecated)
+#
+
+function Debug_Variable() {
+    debugValue $@
+}
+
+#
+# Main
+#
 
 dependency "
 which
 awk
 hostname
 printf
-pwd
 readlink
 sed
 tput
@@ -348,12 +358,10 @@ logname
 who
 "
 
-if [ "$Here" == "" ]; then Here=$(readlink -f $(pwd)); fi
+# Global_Variables (that do require dependencies)
 
 if [ "$Hostname" == "" ]; then Hostname=$HOSTNAME; fi
 if [ "$Hostname" == "" ]; then Hostname=$(hostname -s); fi
-
-if [ "$Pwd" == "" ]; then Pwd=$(pwd); fi
 
 if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
 
@@ -368,13 +376,9 @@ if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0)"; fi
 if [ "$Whom" == "" ]; then Whom=$(who -m); fi
 
 if [ "$Who" == "" ]; then Whom=$(logname); fi
-
 if [ "$Who" == "" ]; then Who="${Whom%% *}"; fi
-
 if [ "$Who" == "" ]; then Who=anoymous; fi
 
 if [ "$Who_Ip" == "" ]; then Who_Ip="${Whom#*(}"; Who_Ip="${Who_Ip%)*}"; fi
-
 if [ "$Who_Ip" == "" ] && [ "$SSH_CLIENT" != "" ]; then Who_Ip=${SSH_CLIENT%% *}; fi
-
 if [ "$Who_Ip" == "" ]; then Who_Ip="127.0.0.1"; fi

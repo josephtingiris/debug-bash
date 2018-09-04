@@ -54,7 +54,7 @@ function aborting() {
     fi
     local aborting_message="aborting, $1 ($return_code) ..."
 
-    printf "\n$aborting_message\n\n"
+    (>&2 printf "\n$aborting_message\n\n")
 
     exit $return_code
 
@@ -123,8 +123,8 @@ function debug() {
                 let debug_color=$debug_level
             fi
             if [ $debug_level -lt 15 ]; then
-                printf "%s" ${Tput_Bold}
-                printf "%s" "$(tput setaf $debug_color)"
+                (>&2 printf "%s" ${Tput_Bold})
+                (>&2 printf "%s" "$(tput setaf $debug_color)")
             else
                 if [ $debug_level -le 101 ]; then
                     local bg_color fg_color
@@ -143,14 +143,14 @@ function debug() {
                             local tput_setab=$(tput setab $bg_color)
                         done
                     done
-                    #printf "%s" ${Tput_Bold}
-                    printf "%s" ${tput_setab}
-                    printf "%s" ${tput_setaf}
+                    #(>&2 printf "%s" ${Tput_Bold})
+                    (>&2 printf "%s" ${tput_setab})
+                    (>&2 printf "%s" ${tput_setaf})
                     let debug_color=$debug_color*5
                 else
-                    printf "%s" $tput_smso
+                    (>&2 printf "%s" $tput_smso)
                     let debug_color=$debug_color+12
-                    printf "%s" "$(tput setab $debug_color)"
+                    (>&2 printf "%s" "$(tput setab $debug_color)")
                 fi
             fi
 
@@ -163,14 +163,14 @@ function debug() {
         if [ "$debug_function_name" != "" ] && [ $Debug -ge 15 ]; then
             let local debug_function_name_pad=${debug_function_name_minimum_width}-${#debug_function_name}
             if [ ${debug_function_name_pad} -lt 0 ]; then debug_function_name_pad=0; fi
-            printf "%s%${debug_identifier_pad}s : %s : %s()%${debug_function_name_pad}s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_function_name}" " " "${debug_message}${Tput_Sgr0}"
+            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s()%${debug_function_name_pad}s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_function_name}" " " "${debug_message}${Tput_Sgr0}")
         else
-            printf "%s%${debug_identifier_pad}s : %s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_message}${Tput_Sgr0}"
+            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_message}${Tput_Sgr0}")
         fi
 
         # reset the color, if applicable
         if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
-            printf "%s" ${Tput_Sgr0}
+            (>&2 printf "%s" ${Tput_Sgr0})
         fi
     fi
 

@@ -378,9 +378,9 @@ if [ "$Hostname" == "" ]; then Hostname=$(hostname -s); fi
 
 if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
 
-if [ "$Tput_Setab" == "" ]; then Tput_Smso="$(tput setab)"; fi
+if [ "$Tput_Setab" == "" ]; then Tput_Setab="$(tput setab)"; fi
 
-if [ "$Tput_Setaf" == "" ]; then Tput_Smso="$(tput setaf)"; fi
+if [ "$Tput_Setaf" == "" ]; then Tput_Setaf="$(tput setaf)"; fi
 
 if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso)"; fi
 

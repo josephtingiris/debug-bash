@@ -105,7 +105,7 @@ function debug() {
             # do not output anything for these callers
             if [[ $debug_caller == *List* ]]; then continue; fi
 
-            # omit these callers; function names that have these strings in them with *not* be debugged
+            # omit these callers; function names that have these strings in them will *not* be debugged
             if [[ $debug_caller == *debug* ]]; then continue; fi
             if [[ $debug_caller == *question* ]]; then continue; fi
             if [[ $debug_caller == *step* ]]; then continue; fi

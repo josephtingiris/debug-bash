@@ -200,28 +200,32 @@ function debugColors() {
 
     if [ $Debug -lt 1000 ]; then return; fi # this function provides little value to an end user
 
-    local color column line
+    if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
+        local color column line
 
-    printf "Standard 16 colors\n"
-    for ((color = 0; color < 17; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
-    done
-    printf "|\n\n"
+        printf "Standard 16 colors\n"
+        for ((color = 0; color < 17; color++)); do
+            printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+        done
+        printf "|\n\n"
 
-    printf "Colors 16 to 231 for 256 colors\n"
-    for ((color = 16, column = line = 0; color < 232; color++, column++)); do
-        printf "|"
-        ((column > 5 && (column = 0, ++line))) && printf " |"
-        ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
-        printf "%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
-    done
-    printf "|\n\n"
+        printf "Colors 16 to 231 for 256 colors\n"
+        for ((color = 16, column = line = 0; color < 232; color++, column++)); do
+            printf "|"
+            ((column > 5 && (column = 0, ++line))) && printf " |"
+            ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
+            printf "%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+        done
+        printf "|\n\n"
 
-    printf "Greyscale 232 to 255 for 256 colors\n"
-    for ((; color < 256; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
-    done
-    printf "|\n"
+        printf "Greyscale 232 to 255 for 256 colors\n"
+        for ((; color < 256; color++)); do
+            printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+        done
+        printf "|\n"
+    else
+        printf "debug colors not supported\n"
+    fi
 
     # end function logic
 
@@ -376,15 +380,13 @@ who
 if [ "$Hostname" == "" ]; then Hostname=$HOSTNAME; fi
 if [ "$Hostname" == "" ]; then Hostname=$(hostname -s); fi
 
-if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
-
-if [ "$Tput_Setab" == "" ]; then Tput_Setab="$(tput setab)"; fi
-
-if [ "$Tput_Setaf" == "" ]; then Tput_Setaf="$(tput setaf)"; fi
-
-if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso)"; fi
-
-if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0)"; fi
+if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
+    if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
+    if [ "$Tput_Setab" == "" ]; then Tput_Setab="$(tput setab)"; fi
+    if [ "$Tput_Setaf" == "" ]; then Tput_Setaf="$(tput setaf)"; fi
+    if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso)"; fi
+    if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0)"; fi
+fi
 
 if [ "$Whom" == "" ]; then Whom=$(who -m); fi
 

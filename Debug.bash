@@ -137,7 +137,7 @@ function debug() {
             fi
             if [ $debug_level -lt 15 ]; then
                 (>&2 printf "%s" ${Tput_Bold})
-                (>&2 printf "%s" "$(tput setaf $debug_color)")
+                (>&2 printf "%s" "$(tput setaf $debug_color) 2> /dev/null")
             else
                 if [ $debug_level -le 101 ]; then
                     local bg_color fg_color
@@ -152,8 +152,8 @@ function debug() {
                             let bg_select=$bg_select+1
                             color_select=$bg_select
                             if [ $color_select -ne $debug_level ]; then continue; fi
-                            local tput_setaf=$(tput setaf $fg_color)
-                            local tput_setab=$(tput setab $bg_color)
+                            local tput_setaf=$(tput setaf $fg_color 2> /dev/null)
+                            local tput_setab=$(tput setab $bg_color 2> /dev/null)
                         done
                     done
                     #(>&2 printf "%s" ${Tput_Bold})
@@ -163,7 +163,7 @@ function debug() {
                 else
                     (>&2 printf "%s" $tput_smso)
                     let debug_color=$debug_color+12
-                    (>&2 printf "%s" "$(tput setab $debug_color)")
+                    (>&2 printf "%s" "$(tput setab $debug_color)" 2> /dev/null)
                 fi
             fi
 
@@ -205,7 +205,7 @@ function debugColors() {
 
         printf "Standard 16 colors\n"
         for ((color = 0; color < 17; color++)); do
-            printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+            printf "|%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
         done
         printf "|\n\n"
 
@@ -214,13 +214,13 @@ function debugColors() {
             printf "|"
             ((column > 5 && (column = 0, ++line))) && printf " |"
             ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
-            printf "%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+            printf "%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
         done
         printf "|\n\n"
 
         printf "Greyscale 232 to 255 for 256 colors\n"
         for ((; color < 256; color++)); do
-            printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "${Tput_Sgr0}"
+            printf "|%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
         done
         printf "|\n"
     else
@@ -378,19 +378,19 @@ who
 # Global_Variables (that do require dependencies)
 
 if [ "$Hostname" == "" ]; then Hostname=$HOSTNAME; fi
-if [ "$Hostname" == "" ]; then Hostname=$(hostname -s); fi
+if [ "$Hostname" == "" ]; then Hostname=$(hostname -s 2> /dev/null); fi
 
 if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
-    if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold)"; fi
-    if [ "$Tput_Setab" == "" ]; then Tput_Setab="$(tput setab)"; fi
-    if [ "$Tput_Setaf" == "" ]; then Tput_Setaf="$(tput setaf)"; fi
-    if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso)"; fi
-    if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0)"; fi
+    if [ "$Tput_Bold" == "" ]; then Tput_Bold="$(tput bold 2> /dev/null)"; fi
+    if [ "$Tput_Setab" == "" ]; then Tput_Setab="$(tput setab 2> /dev/null)"; fi
+    if [ "$Tput_Setaf" == "" ]; then Tput_Setaf="$(tput setaf 2> /dev/null)"; fi
+    if [ "$Tput_Smso" == "" ]; then Tput_Smso="$(tput smso 2> /dev/null)"; fi
+    if [ "$Tput_Sgr0" == "" ]; then Tput_Sgr0="$(tput sgr0 2> /dev/null)"; fi
 fi
 
-if [ "$Whom" == "" ]; then Whom=$(who -m); fi
+if [ "$Whom" == "" ]; then Whom=$(who -m 2> /dev/null); fi
 
-if [ "$Who" == "" ]; then Whom=$(logname); fi
+if [ "$Who" == "" ]; then Whom=$(logname 2> /dev/null); fi
 if [ "$Who" == "" ]; then Who="${Whom%% *}"; fi
 if [ "$Who" == "" ]; then Who=anoymous; fi
 

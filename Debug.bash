@@ -20,6 +20,7 @@
 #
 # 20191113, joseph.tingiris@gmail.com, maintenance review (still using daily); moved primary repo from local svn to github
 # 20130228, joseph.tingiris@gmail.com
+#
 
 export PATH="/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/sbin:/usr/sbin:${PATH}"
 
@@ -69,11 +70,11 @@ function aborting() {
     else
         local -i return_code=9
     fi
-    local aborting_message="aborting, $1 ($return_code) ..."
+    local aborting_message="aborting, $1 (${return_code}) ..."
 
-    (>&2 printf "\n$aborting_message\n\n")
+    (>&2 printf "\n${aborting_message}\n\n")
 
-    exit $return_code
+    exit ${return_code}
 
     # end function logic
 
@@ -94,95 +95,95 @@ function debug() {
     local debug_function_name="$3"
     local -i debug_output=0
 
-    if [ "$debug_function_name" == "" ] && [ "$debugFunction_Name" != "" ]; then
-        debug_function_name=$debugFunction_Name
+    if [ "${debug_function_name}" == "" ] && [ "${debugFunction_Name}" != "" ]; then
+        debug_function_name=${debugFunction_Name}
     else
         # automatically determine the caller
         local debug_caller_name=""
         local -i caller_frame=0
-        while [ $caller_frame -lt 10 ]; do
-            local debug_caller=$(caller $caller_frame)
+        while [ ${caller_frame} -lt 10 ]; do
+            local debug_caller=$(caller ${caller_frame})
             ((caller_frame++))
 
-            if [ "$debug_caller" == "" ]; then break; fi
+            if [ "${debug_caller}" == "" ]; then break; fi
 
             # do not output anything for these callers
-            if [[ $debug_caller == *List* ]]; then continue; fi
+            if [[ ${debug_caller} == *List* ]]; then continue; fi
 
             # omit these callers; function names that have these strings in them will *not* be debugged
-            if [[ $debug_caller == *debug* ]]; then continue; fi
-            if [[ $debug_caller == *question* ]]; then continue; fi
-            if [[ $debug_caller == *step* ]]; then continue; fi
+            if [[ ${debug_caller} == *debug* ]]; then continue; fi
+            if [[ ${debug_caller} == *question* ]]; then continue; fi
+            if [[ ${debug_caller} == *step* ]]; then continue; fi
 
             local debug_caller_name=${debug_caller% *}
             local debug_caller_name=${debug_caller_name#* }
-            if [ "$debug_caller_name" != "" ]; then break; fi
+            if [ "${debug_caller_name}" != "" ]; then break; fi
         done
-        local debug_function_name=$debug_caller_name
+        local debug_function_name=${debug_caller_name}
     fi
 
-    if [ $Debug -ge $debug_level ]; then
+    if [ $Debug -ge ${debug_level} ]; then
         local -i debug_output=1
     fi
 
-    if [ $debug_level -eq 0 ]; then
+    if [ ${debug_level} -eq 0 ]; then
         # any debug with a level of zero; message will be displayed
         local -i debug_output=1
     fi
 
-    if [ $debug_output -eq 1 ]; then
+    if [ ${debug_output} -eq 1 ]; then
 
         # set the color, if applicable
         if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then
-            if [ $debug_level -ge 256 ]; then
-                let debug_color=$debug_level/256
+            if [ ${debug_level} -ge 256 ]; then
+                let debug_color=${debug_level}/256
             else
-                let debug_color=$debug_level
+                let debug_color=${debug_level}
             fi
-            if [ $debug_level -lt 15 ]; then
+            if [ ${debug_level} -lt 15 ]; then
                 (>&2 printf "%s" ${Tput_Bold})
-                (>&2 printf "%s" "$(tput setaf $debug_color 2> /dev/null)")
+                (>&2 printf "%s" "$(tput setaf ${debug_color} 2> /dev/null)")
             else
-                if [ $debug_level -le 101 ]; then
+                if [ ${debug_level} -le 101 ]; then
                     local bg_color fg_color
                     let local color_select=16
                     let local bg_select=0
                     let local fg_select=0
                     for fg_color in {0..15}; do
-                        let fg_select=$fg_select+1
-                        color_select=$fg_select
+                        let fg_select=${fg_select}+1
+                        color_select=${fg_select}
                         for bg_color in {1..11}; do
-                            if [ $bg_color -eq $fg_color ]; then continue; fi
-                            let bg_select=$bg_select+1
-                            color_select=$bg_select
-                            if [ $color_select -ne $debug_level ]; then continue; fi
-                            local tput_setaf=$(tput setaf $fg_color 2> /dev/null)
-                            local tput_setab=$(tput setab $bg_color 2> /dev/null)
+                            if [ ${bg_color} -eq ${fg_color} ]; then continue; fi
+                            let bg_select=${bg_select}+1
+                            color_select=${bg_select}
+                            if [ ${color_select} -ne ${debug_level} ]; then continue; fi
+                            local tput_setaf=$(tput setaf ${fg_color} 2> /dev/null)
+                            local tput_setab=$(tput setab ${bg_color} 2> /dev/null)
                         done
                     done
                     #(>&2 printf "%s" ${Tput_Bold})
                     (>&2 printf "%s" ${tput_setab})
                     (>&2 printf "%s" ${tput_setaf})
-                    let debug_color=$debug_color*5
+                    let debug_color=${debug_color}*5
                 else
-                    (>&2 printf "%s" $tput_smso)
-                    let debug_color=$debug_color+12
-                    (>&2 printf "%s" "$(tput setab $debug_color 2> /dev/null)")
+                    (>&2 printf "%s" ${tput_smso})
+                    let debug_color=${debug_color}+12
+                    (>&2 printf "%s" "$(tput setab ${debug_color} 2> /dev/null)")
                 fi
             fi
 
         fi
 
         # display the appropriate message
-        local debug_identifier="debug [$debug_level]"
+        local debug_identifier="debug [${debug_level}]"
         let local debug_identifier_pad=${debug_identifier_minimum_width}-${#debug_identifier}
         if [ ${debug_identifier_pad} -lt 0 ]; then debug_identifier_pad=0; fi
-        if [ "$debug_function_name" != "" ] && [ $Debug -ge 15 ]; then
+        if [ "${debug_function_name}" != "" ] && [ $Debug -ge 15 ]; then
             let local debug_function_name_pad=${debug_function_name_minimum_width}-${#debug_function_name}
             if [ ${debug_function_name_pad} -lt 0 ]; then debug_function_name_pad=0; fi
-            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s()%${debug_function_name_pad}s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_function_name}" " " "${debug_message}${Tput_Sgr0}")
+            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s()%${debug_function_name_pad}s : %s\n" "${debug_identifier}" " " "${Hostname}" "${debug_function_name}" " " "${debug_message}${Tput_Sgr0}")
         else
-            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s\n" "$debug_identifier" " " "${Hostname}" "${debug_message}${Tput_Sgr0}")
+            (>&2 printf "%s%${debug_identifier_pad}s : %s : %s\n" "${debug_identifier}" " " "${Hostname}" "${debug_message}${Tput_Sgr0}")
         fi
 
         # reset the color, if applicable
@@ -244,15 +245,15 @@ function debugFunction() {
     local debug_caller_name=${debug_caller% *}
     local debug_caller_name=${debug_caller_name#* }
 
-    if [ "$debug_caller_name" != "" ]; then
-        local debug_function_name=$debug_caller_name
+    if [ "${debug_caller_name}" != "" ]; then
+        local debug_function_name=${debug_caller_name}
     else
         local debug_function_name="UNKNOWN"
     fi
 
-    local debug_function_switch=debugFunction_Name_$debug_function_name
+    local debug_function_switch=debugFunction_Name_${debug_function_name}
 
-    if [ "$debugFunction_Name" == "" ]; then
+    if [ "${debugFunction_Name}" == "" ]; then
         debugFunction_Name="main"
     fi
 
@@ -264,16 +265,16 @@ function debugFunction() {
         export ${debug_function_switch}="on"
     fi
 
-    local debug_function_message="$debug_function_status function $debug_function_name() $@"
+    local debug_function_message="${debug_function_status} function ${debug_function_name}() $@"
     #local debug_function_message="${debug_function_message%"${debug_function_message##*[![:space:]]}"}" # trim trailing spaces
 
-    if [[ "$debug_function_name" == debug* ]]; then
+    if [[ "${debug_function_name}" == debug* ]]; then
         local debug_function_level=1000 # only debugFunction debug functions at an extremely high level
     else
         local debug_function_level=100
     fi
 
-    debug "$debug_function_message" $debug_function_level $debug_function_name
+    debug "${debug_function_message}" ${debug_function_level} ${debug_function_name}
 
     # end function logic
 
@@ -288,16 +289,16 @@ function debugSeparator() {
     local -i debug_level="$2"
     local -i separator_length="$3"
 
-    if [ "$separator_character" == "" ]; then separator_character="="; fi
-    if [ $separator_length -eq 0 ]; then separator_length=80; fi
+    if [ "${separator_character}" == "" ]; then separator_character="="; fi
+    if [ ${separator_length} -eq 0 ]; then separator_length=80; fi
 
     local separator=""
-    while [ $separator_length -gt 0 ]; do
-        local separator+=$separator_character
+    while [ ${separator_length} -gt 0 ]; do
+        local separator+=${separator_character}
         local -i separator_length=$((separator_length-1))
     done
 
-    debug $separator $debug_level
+    debug ${separator} ${debug_level}
 
     # end function logic
 
@@ -313,22 +314,22 @@ function debugValue() {
     local variable_comment="$3"
 
     local variable_value=${!variable_name}
-    if [ "$variable_value" == "" ]; then variable_value="Null"; fi
+    if [ "${variable_value}" == "" ]; then variable_value="Null"; fi
 
     # manual padding; call debug() to display it
     local -i variable_pad=25 # the character position to pad to
     local -i variable_padded=0
     local -i variable_length=${#variable_name}
-    local -i variable_position=$variable_pad-$variable_length
+    local -i variable_position=${variable_pad}-${variable_length}
 
-    while [ $variable_padded -le $variable_position ]; do
+    while [ ${variable_padded} -le ${variable_position} ]; do
         local variable_name+=" "
         local -i variable_padded=$((variable_padded+1))
     done
 
-    if [ "$variable_comment" != "" ]; then variable_value+=" ($variable_comment)"; fi
+    if [ "${variable_comment}" != "" ]; then variable_value+=" (${variable_comment})"; fi
 
-    debug "$variable_name = $variable_value" $debug_level
+    debug "${variable_name} = ${variable_value}" ${debug_level}
 
     # end function logic
 

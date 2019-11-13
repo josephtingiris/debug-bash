@@ -17,20 +17,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+#
+# 20191113, joseph.tingiris@gmail.com, maintenance review (still using daily); moved primary repo from local svn to github
+# 20130228, joseph.tingiris@gmail.com
+
 export PATH="/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/sbin:/usr/sbin:${PATH}"
 
 #
 # Global_Variables (that do not require dependencies)
 #
 
-if [ "$Debug" == "" ]; then
-    if [ "$DEBUG" == "" ]; then
+if [ "${Debug}" == "" ]; then
+    if [ "${DEBUG}" == "" ]; then
         let Debug=0
     else
-        let Debug=$DEBUG
+        let Debug=${DEBUG}
     fi
 else
-    let Debug=$Debug
+    let Debug=${Debug}
 fi
 
 # bash environment (overrides)
@@ -137,7 +141,7 @@ function debug() {
             fi
             if [ $debug_level -lt 15 ]; then
                 (>&2 printf "%s" ${Tput_Bold})
-                (>&2 printf "%s" "$(tput setaf $debug_color) 2> /dev/null")
+                (>&2 printf "%s" "$(tput setaf $debug_color 2> /dev/null)")
             else
                 if [ $debug_level -le 101 ]; then
                     local bg_color fg_color
@@ -163,7 +167,7 @@ function debug() {
                 else
                     (>&2 printf "%s" $tput_smso)
                     let debug_color=$debug_color+12
-                    (>&2 printf "%s" "$(tput setab $debug_color)" 2> /dev/null)
+                    (>&2 printf "%s" "$(tput setab $debug_color 2> /dev/null)")
                 fi
             fi
 
@@ -205,7 +209,7 @@ function debugColors() {
 
         printf "Standard 16 colors\n"
         for ((color = 0; color < 17; color++)); do
-            printf "|%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
+            printf "|%s%3d%s" "$(tput setaf "${color}" 2> /dev/null)" "${color}" "${Tput_Sgr0}"
         done
         printf "|\n\n"
 
@@ -214,13 +218,13 @@ function debugColors() {
             printf "|"
             ((column > 5 && (column = 0, ++line))) && printf " |"
             ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
-            printf "%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
+            printf "%s%3d%s" "$(tput setaf "${color}" 2> /dev/null)" "${color}" "${Tput_Sgr0}"
         done
         printf "|\n\n"
 
         printf "Greyscale 232 to 255 for 256 colors\n"
         for ((; color < 256; color++)); do
-            printf "|%s%3d%s" "$(tput setaf "$color" 2> /dev/null)" "$color" "${Tput_Sgr0}"
+            printf "|%s%3d%s" "$(tput setaf "${color}" 2> /dev/null)" "${color}" "${Tput_Sgr0}"
         done
         printf "|\n"
     else
@@ -330,22 +334,24 @@ function debugValue() {
 
 }
 
-# checks to make sure a dependent executable exists in the PATH (via which) and aborts if it doesn't
+# checks to make sure a dependent executable exists in the PATH and aborts if it doesn't
 function dependency() {
 
     # begin function logic
 
-    local dependency dependencies="$1"
+    local dependency dependencies=($@)
 
-    for dependency in $dependencies; do
-        if [ "$dependency" == "" ]; then continue; fi
-        which $dependency &> /dev/null
-        exit_code=$?
-        if [ $exit_code -ne 0 ]; then
-            aborting "can't find dependency $dependency" 2
+    for dependency in ${dependencies[@]}; do
+        if [ "${dependency}" == "" ]; then
+            continue
+        fi
+
+        if ! type -t ${dependency} &> /dev/null; then
+            aborting "dependency '${dependency}' alias, file, and/or function not found" 2
         fi
     done
     unset dependency dependencies
+
 
     # end function logic
 
@@ -363,21 +369,22 @@ function Debug_Variable() {
 # Main
 #
 
-dependency "
-which
-awk
-hostname
-printf
-readlink
-sed
-tput
-logname
-who
-"
+Debug_Dependencies=()
+
+# validate these dependencies exist
+Debug_Dependencies+=(awk)
+Debug_Dependencies+=(hostname)
+Debug_Dependencies+=(printf)
+Debug_Dependencies+=(readlink)
+Debug_Dependencies+=(sed)
+Debug_Dependencies+=(tput)
+Debug_Dependencies+=(logname)
+Debug_Dependencies+=(who)
+
+dependency ${Debug_Dependencies[@]}
 
 # Global_Variables (that do require dependencies)
 
-if [ "$Hostname" == "" ]; then Hostname=$HOSTNAME; fi
 if [ "$Hostname" == "" ]; then Hostname=$(hostname -s 2> /dev/null); fi
 
 if [ "$TERM" == "ansi" ] || [ "$TERM" == "tmux" ] || [[ "$TERM" == *"color"* ]] || [[ "$TERM" == *"xterm"* ]]; then

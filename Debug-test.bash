@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2018 Joseph Tingiris (joseph.tingiris@gmail.com)
+# Copyright (C) 2013-2019 Joseph Tingiris (joseph.tingiris@gmail.com)
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,37 +15,54 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+# begin Debug.bash.include
 
-if [ "$DEBUG" == "" ] && [ "$Debug" == "" ]; then
+if [ ${#DEBUG} -eq 0 ] && [ ${#Debug} -eq 0 ]; then
     Debug=0
 fi
 
-# begin Debug.bash.include
+if [ ${#Debug_Bash} -eq 0 ]; then
+    Debug_Bashes=()
+    Debug_Bashes+=(Debug.bash)
 
-Debug_Bash="Debug.bash"
-Debug_Bash_Dirs=()
-Debug_Bash_Dirs+=($(dirname $(readlink -e $BASH_SOURCE)))
-for Debug_Bash_Dir in ${Debug_Bash_Dirs[@]}; do
-    while [ "$Debug_Bash_Dir" != "" ] && [ "$Debug_Bash_Dir" != "/" ]; do # search backwards
-        Debug_Bash_Source_Dirs=()
-        Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}")
-        Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}/include")
-        Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}/include/debug-bash")
-        for Debug_Bash_Source_Dir in ${Debug_Bash_Source_Dirs[@]}; do
-            Debug_Bash_Source=${Debug_Bash_Source_Dir}/${Debug_Bash}
-            if [ -r "${Debug_Bash_Source}" ]; then
-                source "${Debug_Bash_Source}"
-                break
-            else
-                unset Debug_Bash_Source
-            fi
+    Debug_Bash_Dirs=()
+    Debug_Bash_Dirs+=(/apex)
+    Debug_Bash_Dirs+=(/base)
+    Debug_Bash_Dirs+=(/usr)
+    Debug_Bash_Dirs+=(${BASH_SOURCE%/*})
+    Debug_Bash_Dirs+=(~)
+
+    for Debug_Bash_Dir in ${Debug_Bash_Dirs[@]}; do
+        while [ ${#Debug_Bash_Dir} -gt 0 ] && [ "$Debug_Bash_Dir" != "/" ]; do # search backwards
+            Debug_Bash_Source_Dirs=()
+            Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}/include/debug-bash")
+            Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}/include")
+            Debug_Bash_Source_Dirs+=("${Debug_Bash_Dir}")
+            for Debug_Bash in ${Debug_Bashes[@]}; do
+                for Debug_Bash_Source_Dir in "${Debug_Bash_Source_Dirs[@]}"; do
+                    Debug_Bash_Source=${Debug_Bash_Source_Dir}/${Debug_Bash}
+
+                    if [ -r "${Debug_Bash_Source}" ]; then
+                        source "${Debug_Bash_Source}"
+                        break
+                    else
+                        unset -v Debug_Bash_Source
+                    fi
+                done
+                [ ${Debug_Bash_Source} ] && break
+            done
+            [ ${Debug_Bash_Source} ] && break
+
+            Debug_Bash_Dir=${Debug_Bash_Dir%/*} # search backwards
         done
-        if [ "$Debug_Bash_Source" != "" ]; then break; fi
-        Debug_Bash_Dir=$(dirname "$Debug_Bash_Dir") # search backwards
+        [ ${Debug_Bash_Source} ] && break
     done
-done
-if [ "$Debug_Bash_Source" == "" ]; then echo "$Debug_Bash file not found"; exit 1; fi
-unset Debug_Bash_Dir Debug_Bash
+fi
+
+if [ ${#Debug_Bash_Source} -eq 0 ] || [ ! -r "${Debug_Bash_Source}" ]; then
+    echo "${Debug_Bash} file not readable"
+    exit 1
+fi
 
 # end Debug.bash.include
 
